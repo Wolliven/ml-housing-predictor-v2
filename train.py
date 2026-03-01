@@ -18,8 +18,11 @@ def main() -> None:
     args = parser.parse_args()
 
     result = train_model(args.data_csv, model_path=args.model_path)
+    print(f"Cross-validation R² scores: {result['scores']}")
+    print(f"Mean R² score: {result['mean']:.4f}")
+    print(f"Standard deviation of R² scores: {result['std']:.4f}")
     print(f"Training model with the following dataset: {result['data']}")
-    print(f"Model saved to {result["model"]}")
+    print(f"Model saved to {result['model']}")
 
 if __name__ == "__main__":
     try:
