@@ -18,9 +18,15 @@ def main() -> None:
     args = parser.parse_args()
 
     result = train_model(args.data_csv, model_path=args.model_path)
-    print(f"Cross-validation R² scores: {result['scores']}")
-    print(f"Mean R² score: {result['mean']:.4f}")
-    print(f"Standard deviation of R² scores: {result['std']:.4f}")
+    print(f"Linear Model Results:")
+    print(f"Cross-validation R² scores: {result['linear']['scores']}")
+    print(f"Mean R² score: {result['linear']['mean']:.4f}")
+    print(f"Standard deviation of R² scores: {result['linear']['std']:.4f}")
+    print(f"Ridge Model Results:")
+    print(f"Cross-validation R² scores: {result['ridge']['scores']}")
+    print(f"Mean R² score: {result['ridge']['mean']:.4f}")
+    print(f"Standard deviation of R² scores: {result['ridge']['std']:.4f}")
+    print(f"Best alpha for Ridge Regression: {result['ridge']['alpha']}")
     print(f"Training model with the following dataset: {result['data']}")
     print(f"Model saved to {result['model']}")
 
