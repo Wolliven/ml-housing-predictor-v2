@@ -52,24 +52,31 @@ def train_model(data_csv : str, model_path : str = "model.pkl"):
     mean_ridge = scores_ridge.mean()
     std_ridge = scores_ridge.std()
 
+    if abs(mean_ridge - mean_linear) < (std_linear + std_ridge) / 2:
+        selection = "tie"
+        model = model_linear
+    elif mean_ridge > mean_linear:
+        selection = "ridge"
+        model = model_ridge
+    else:
+        selection = "linear"
+        model = model_linear
+
     linear = {
-        "model" : model_linear,
-        "scores" : scores_linear,
         "mean" : mean_linear,
         "std" : std_linear
     }
     ridge = {
-        "model" : model_ridge,
-        "scores" : scores_ridge,
         "mean" : mean_ridge,
         "std" : std_ridge,
-        "alpha" : best_alpha
     }
     result = {
+        "selection" : selection,
+        "model" : model,
         "linear" : linear,
         "ridge" : ridge,
         "data" : data_csv,
-        "model" : model_path
+        "model_path" : model_path
     }
     return result
 

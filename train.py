@@ -19,16 +19,17 @@ def main() -> None:
 
     result = train_model(args.data_csv, model_path=args.model_path)
     print(f"Linear Model Results:")
-    print(f"Cross-validation R² scores: {result['linear']['scores']}")
-    print(f"Mean R² score: {result['linear']['mean']:.4f}")
-    print(f"Standard deviation of R² scores: {result['linear']['std']:.4f}")
+    print(f"Mean R² score: {result['linear']['mean']:.4f}±{result['linear']['std']:.4f}")
     print(f"Ridge Model Results:")
-    print(f"Cross-validation R² scores: {result['ridge']['scores']}")
-    print(f"Mean R² score: {result['ridge']['mean']:.4f}")
-    print(f"Standard deviation of R² scores: {result['ridge']['std']:.4f}")
-    print(f"Best alpha for Ridge Regression: {result['ridge']['alpha']}")
+    print(f"Mean R² score: {result['ridge']['mean']:.4f}±{result['ridge']['std']:.4f}")
+    if result['selection'] == "tie":
+        print("The performance difference between Ridge and Linear Regression is not statistically significant. The simplest model (Linear Regression) will be selected.")
+    elif result['selection'] == "ridge":
+        print("Ridge Regression was selected based on cross-validation performance.")
+    else:
+        print("Linear Regression was selected based on cross-validation performance.")
     print(f"Training model with the following dataset: {result['data']}")
-    print(f"Model saved to {result['model']}")
+    print(f"Model saved to {result['model_path']}")
 
 if __name__ == "__main__":
     try:
