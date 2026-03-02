@@ -1,7 +1,7 @@
 """
 Main engine for model training
 """
-from asyncio import log
+import logging as log
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, cross_val_score
@@ -78,9 +78,25 @@ def train_model(data_csv : str, model_path : str = "model.pkl"):
         "data" : data_csv,
         "model_path" : model_path
     }
+
+    with open(model_path, "wb") as f:
+        pkl.dump(result, f)
+
     return result
 
 def predict(input_data : str, model_path : str = "model.pkl") -> dict:
+    if not model_path:
+        model_path = "model.pkl"
+    if not input_data.endswith(".json"):
+        raise ValueError("Invalid prediction input file format. Please provide a JSON file.")
+    if not model_path.endswith(".pkl"):
+        raise ValueError("Invalid model file format. Please provide a .pkl file.")
+    try:
+        with open(model_path, "rb") as f:
+            model_data = pkl.load(f)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Model file not found: {model_path}")
+    
     result = {
         "model" : model_path,
         "input" : input_data,
