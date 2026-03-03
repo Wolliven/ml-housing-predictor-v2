@@ -7,7 +7,7 @@ def main() -> None:
     from ml_engine import predict
     parser = argparse.ArgumentParser(
         description="Use model to make a prediction",
-        epilog="python predict.py [--model model.pkl] input.json"
+        epilog="python predict.py [--model model.pkl] input.json/csv"
     )
     parser.add_argument("--model", type=str, required=False, help="Path to model to be used in the prediction")
     parser.add_argument("input", type=str, help="Path to data to be used in the prediction")

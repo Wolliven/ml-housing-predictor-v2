@@ -61,6 +61,8 @@ def train_model(data_csv : str, model_path : str = "model.pkl"):
     else:
         selection = "linear"
         model = model_linear
+    
+    model.fit(X, y)
 
     linear = {
         "mean" : mean_linear,
@@ -76,7 +78,8 @@ def train_model(data_csv : str, model_path : str = "model.pkl"):
         "linear" : linear,
         "ridge" : ridge,
         "data" : data_csv,
-        "model_path" : model_path
+        "model_path" : model_path,
+        "features" : X.columns.tolist()
     }
 
     with open(model_path, "wb") as f:
@@ -87,8 +90,8 @@ def train_model(data_csv : str, model_path : str = "model.pkl"):
 def predict(input_data : str, model_path : str = "model.pkl") -> dict:
     if not model_path:
         model_path = "model.pkl"
-    if not input_data.endswith(".json"):
-        raise ValueError("Invalid prediction input file format. Please provide a JSON file.")
+    if not (input_data.endswith(".json") or input_data.endswith(".csv")):
+        raise ValueError("Invalid prediction input file format. Please provide a JSON or CSV file.")
     if not model_path.endswith(".pkl"):
         raise ValueError("Invalid model file format. Please provide a .pkl file.")
     try:
@@ -97,6 +100,19 @@ def predict(input_data : str, model_path : str = "model.pkl") -> dict:
     except FileNotFoundError:
         raise FileNotFoundError(f"Model file not found: {model_path}")
     
+    df = pd.read_csv(input_data) if input_data.endswith(".csv") else pd.read_json(input_data)
+    missing_rows = df.isna().any(axis=1).sum()
+    if missing_rows > 0:
+        print(f"Warning: {missing_rows} row/s with missing values will be dropped.")
+    df = df.dropna()
+    expected = model_data["features"]
+    missing = [feat for feat in expected if feat not in df.columns]
+    if missing:
+        raise ValueError(f"Missing required features in the input data: {', '.join(missing)}")
+    input_data = df[expected]
+    prediction = model_data["model"].predict(input_data)
+    print(f"Predictions: {prediction}")
+
     result = {
         "model" : model_path,
         "input" : input_data,
