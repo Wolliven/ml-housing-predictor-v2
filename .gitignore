@@ -1,2 +1,4 @@
 __pycache__/
 *.pkl
+predictions.json
+predictions.csv
