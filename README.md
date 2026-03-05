@@ -47,6 +47,7 @@ This project emphasizes correctness, evaluation discipline, and reproducibility.
 
 ```
 ml-housing-predictor-v2/
+├── input/
 ├── data/
 ├── train.py
 ├── predict.py
