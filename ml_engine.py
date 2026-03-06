@@ -138,4 +138,4 @@ def predict(input_data : str, model_path : str = None, output_path : str = None)
     else:
         output_df.to_json(output_path, orient="records", indent=2)
         
-    return None
+    return output_path
