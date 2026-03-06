@@ -98,7 +98,7 @@ Selection is automatic based on the chosen scoring metric.
 ### Train a model
 
 ```
-python train.py data.csv --path model.pkl
+python train.py data.csv [--model_path model.pkl]
 ```
 
 This will:
@@ -113,7 +113,7 @@ This will:
 ### Make predictions
 
 ```
-python predict.py --model model.pkl --input input.json
+python predict.py [--model model.pkl] input.json [--out output.json/csv]
 ```
 
 This will:
