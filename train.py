@@ -23,7 +23,7 @@ def main() -> None:
     print(f"Ridge Model Results:")
     print(f"Mean R² score: {result['ridge']['mean']:.4f}±{result['ridge']['std']:.4f}")
     if result['selection'] == "tie":
-        print("The performance difference between Ridge and Linear Regression is not statistically significant. The simplest model (Linear Regression) will be selected.")
+        print("The cross-validation results are very close, so the simpler model (Linear Regression) will be selected.")
     elif result['selection'] == "ridge":
         print("Ridge Regression was selected based on cross-validation performance.")
     else:
