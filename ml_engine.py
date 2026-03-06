@@ -1,18 +1,21 @@
 """
-Main engine for model training
+ML Engine for Housing Price Prediction
+This module contains functions for training a machine learning model to predict housing prices based on the California housing dataset, and for making predictions using the trained model.
+The `train_model` function trains a regression model (either Linear Regression or Ridge Regression based on cross-validation performance) and saves it to disk.
+The `predict` function loads a trained model, takes input data in JSON or CSV format, preprocesses it, makes predictions, and saves the results to a specified output file in JSON or CSV format.
 """
 import json
-import logging as log
+import logging
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.linear_model import LinearRegression, Ridge, RidgeCV
-from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+from sklearn.model_selection import cross_val_score, GridSearchCV
+from sklearn.linear_model import LinearRegression, Ridge
 import pandas as pd
 import pickle as pkl
 
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
-def train_model(data_csv : str, model_path : str = "model.pkl"):
+def train_model(data_csv : str, model_path : str = "model.pkl") -> dict:
     if not model_path:
         model_path = "model.pkl"
     if not data_csv.endswith(".csv"):
@@ -23,8 +26,12 @@ def train_model(data_csv : str, model_path : str = "model.pkl"):
     df = pd.read_csv(data_csv)
     missing_rows = df.isna().any(axis=1).sum()
     if missing_rows > 0:
-        log(f"Warning: {missing_rows} row/s with missing values will be dropped.")
+        logging.warning(f"Warning: {missing_rows} row/s with missing values will be dropped.")
     df = df.dropna()
+    if df.empty:
+        raise ValueError("The dataset is empty after dropping rows with missing values.")
+    if "MedHouseVal" not in df.columns:
+        raise ValueError("Target variable 'MedHouseVal' not found in the dataset.")
     X = df.drop(columns=["MedHouseVal"])
     y = df["MedHouseVal"]
 
@@ -34,17 +41,16 @@ def train_model(data_csv : str, model_path : str = "model.pkl"):
     ])
 
     #Hyperparameter tuning for Ridge Regression using RidgeCV
-    model_ridge = Pipeline([
+    ridge_pipeline = Pipeline([
         ("scaler", StandardScaler()),
-        ("model", RidgeCV(alphas=[0.001,0.1, 1.0, 10.0, 100.0], cv=5))
+        ("model", Ridge())
     ])
-    model_ridge.fit(X, y)
-    best_alpha = model_ridge.named_steps["model"].alpha_
-
-    model_ridge = Pipeline([
-        ("scaler", StandardScaler()),
-        ("model", Ridge(alpha=best_alpha))
-    ])
+    model_ridge = GridSearchCV(
+        ridge_pipeline,
+        param_grid={"model__alpha": [0.001, 0.1, 1.0, 10.0, 100.0]},
+        cv=5,
+        scoring="r2"
+    )
 
     scores_ridge = cross_val_score(model_ridge, X, y, cv=5, scoring="r2")
     scores_linear = cross_val_score(model_linear, X, y, cv=5, scoring="r2")
@@ -54,7 +60,7 @@ def train_model(data_csv : str, model_path : str = "model.pkl"):
     std_ridge = scores_ridge.std()
 
     if abs(mean_ridge - mean_linear) < (std_linear + std_ridge) / 2:
-        selection = "tie"
+        selection = "close"
         model = model_linear
     elif mean_ridge > mean_linear:
         selection = "ridge"
@@ -64,6 +70,7 @@ def train_model(data_csv : str, model_path : str = "model.pkl"):
         model = model_linear
     
     model.fit(X, y)
+    model = model.best_estimator_ if selection == "ridge" else model
 
     linear = {
         "mean" : mean_linear,
@@ -88,7 +95,7 @@ def train_model(data_csv : str, model_path : str = "model.pkl"):
 
     return result
 
-def predict(input_data : str, model_path : str = None, output_path : str = None) -> None:
+def predict(input_data : str, model_path : str = None, output_path : str = None) -> str:
     if not model_path:
         model_path = "model.pkl"
     if not (input_data.endswith(".json") or input_data.endswith(".csv")):
@@ -116,7 +123,7 @@ def predict(input_data : str, model_path : str = None, output_path : str = None)
 
     missing_rows = df.isna().any(axis=1).sum()
     if missing_rows > 0:
-        print(f"Warning: {missing_rows} row/s with missing values will be dropped.")
+        logging.warning(f"Warning: {missing_rows} row/s with missing values will be dropped.")
     df = df.dropna()
     expected = model_data["features"]
     missing = [feat for feat in expected if feat not in df.columns]
@@ -124,8 +131,6 @@ def predict(input_data : str, model_path : str = None, output_path : str = None)
         raise ValueError(f"Missing required features in the input data: {', '.join(missing)}")
     input_data = df[expected]
     prediction = model_data["model"].predict(input_data)
-
-    model_type = "ridge" if model_data["selection"] == "ridge" else "linear"
 
     if not output_path:
         output_path = "predictions.json"

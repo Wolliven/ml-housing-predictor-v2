@@ -22,7 +22,7 @@ def main() -> None:
     print(f"Mean R² score: {result['linear']['mean']:.4f}±{result['linear']['std']:.4f}")
     print(f"Ridge Model Results:")
     print(f"Mean R² score: {result['ridge']['mean']:.4f}±{result['ridge']['std']:.4f}")
-    if result['selection'] == "tie":
+    if result['selection'] == "close":
         print("The cross-validation results are very close, so the simpler model (Linear Regression) will be selected.")
     elif result['selection'] == "ridge":
         print("Ridge Regression was selected based on cross-validation performance.")

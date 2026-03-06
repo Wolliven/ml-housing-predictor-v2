@@ -74,10 +74,9 @@ Training performs the following steps:
 
   * trained pipeline
   * feature schema
-  * evaluation metrics
-  * model type
-  * training timestamp
-
+  * cross-validation summary for compared models
+  * selected model information
+  * dataset and model file metadata
 ---
 
 ## Model Comparison
