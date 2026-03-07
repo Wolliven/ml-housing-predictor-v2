@@ -4,25 +4,20 @@ This module contains functions for training a machine learning model to predict 
 The `train_model` function trains a regression model (either Linear Regression or Ridge Regression based on cross-validation performance) and saves it to disk.
 The `predict` function loads a trained model, takes input data in JSON or CSV format, preprocesses it, makes predictions, and saves the results to a specified output file in JSON or CSV format.
 """
+from cmath import sqrt
 import json
 import logging
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import cross_val_score, GridSearchCV
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 from sklearn.linear_model import LinearRegression, Ridge
 import pandas as pd
 import pickle as pkl
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
-def train_model(data_csv : str, model_path : str = "model.pkl") -> dict:
-    if not model_path:
-        model_path = "model.pkl"
-    if not data_csv.endswith(".csv"):
-        raise ValueError("Invalid data file format. Please provide a CSV file.")
-    if not model_path.endswith(".pkl"):
-        raise ValueError("Invalid model file format. Please provide a .pkl file.")
-    
+def load_dataset(data_csv : str) -> tuple[pd.DataFrame, pd.Series]:
     df = pd.read_csv(data_csv)
     missing_rows = df.isna().any(axis=1).sum()
     if missing_rows > 0:
@@ -34,13 +29,14 @@ def train_model(data_csv : str, model_path : str = "model.pkl") -> dict:
         raise ValueError("Target variable 'MedHouseVal' not found in the dataset.")
     X = df.drop(columns=["MedHouseVal"])
     y = df["MedHouseVal"]
+    return X, y
 
+def build_models() -> tuple[Pipeline, GridSearchCV]:
     model_linear = Pipeline([
         ("scaler", StandardScaler()),
         ("model", LinearRegression())
     ])
 
-    #Hyperparameter tuning for Ridge Regression using RidgeCV
     ridge_pipeline = Pipeline([
         ("scaler", StandardScaler()),
         ("model", Ridge())
@@ -51,6 +47,19 @@ def train_model(data_csv : str, model_path : str = "model.pkl") -> dict:
         cv=5,
         scoring="r2"
     )
+    return model_linear, model_ridge
+
+def train_model(data_csv : str, model_path : str = "model.pkl") -> dict:
+    if not model_path:
+        model_path = "model.pkl"
+    if not data_csv.endswith(".csv"):
+        raise ValueError("Invalid data file format. Please provide a CSV file.")
+    if not model_path.endswith(".pkl"):
+        raise ValueError("Invalid model file format. Please provide a .pkl file.")
+    
+    X, y = load_dataset(data_csv)
+    
+    model_linear, model_ridge = build_models()
 
     scores_ridge = cross_val_score(model_ridge, X, y, cv=5, scoring="r2")
     scores_linear = cross_val_score(model_linear, X, y, cv=5, scoring="r2")
@@ -71,6 +80,9 @@ def train_model(data_csv : str, model_path : str = "model.pkl") -> dict:
     
     model.fit(X, y)
     model = model.best_estimator_ if selection == "ridge" else model
+    r2 = r2_score(y, model.predict(X))
+    rmse = sqrt(mean_squared_error(y, model.predict(X)))
+    mae = mean_absolute_error(y, model.predict(X))
 
     linear = {
         "mean" : mean_linear,
