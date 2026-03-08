@@ -16,18 +16,19 @@ RMSE: 0.7476
 
 ### Linear
 mean error: 0.004767687639465916
+standard deviation: 0.7471910666455259
 max error: max: 11.031102630328052
 min error: min: -7.260453292958463
 
 ### Ridge
 mean error: mean: 0.00352093411730337
+standard deviation: 0.7476523100475282
 max error: max: 10.267199773964144
 min error: min: -7.58562065045863
 
 
 
-Observations
-Observations
+## Observations
 - Linear Regression and Ridge Regression performed almost identically, so regularization does not seem to provide a meaningful benefit with the current feature set.
 - The model explains about 58% of the variance in house prices, which suggests it captures useful signal but still leaves a large part of the variation unexplained.
 - The average absolute error is about 0.55 in MedHouseVal units, meaning the model is off by roughly $55,000 on average.
