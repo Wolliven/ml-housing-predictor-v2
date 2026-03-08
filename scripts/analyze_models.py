@@ -5,7 +5,7 @@ from sklearn.model_selection import cross_val_predict, GridSearchCV
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 from sklearn.linear_model import LinearRegression, Ridge
 import pandas as pd
-from ml_engine import load_dataset, build_models
+from ml_engine import load_dataset, build_models, add_features
 
 #Baseline model evaluation using cross-validation predictions
 X, y = load_dataset("data/california_housing.csv")
@@ -57,8 +57,6 @@ def analyze_models(X : pd.DataFrame, y : pd.Series, model_linear : Pipeline, mod
 #analyze_models(X, y, model_linear, model_ridge)
 
 #Features
-X["households"] = X["Population"] / X["AveOccup"]
-X["people_per_bedroom"] = X["AveOccup"] / X["AveBedrms"]
-X["bedrooms_per_room"] = X["AveBedrms"] / X["AveRooms"]
+X = add_features(X)
 
 analyze_models(X, y, model_linear, model_ridge)

@@ -17,6 +17,12 @@ import pickle as pkl
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
+def add_features(X : pd.DataFrame) -> pd.DataFrame:
+    X["households"] = X["Population"] / X["AveOccup"]
+    X["people_per_bedroom"] = X["AveOccup"] / X["AveBedrms"]
+    X["bedrooms_per_room"] = X["AveBedrms"] / X["AveRooms"]
+    return X
+
 def load_dataset(data_csv : str) -> tuple[pd.DataFrame, pd.Series]:
     df = pd.read_csv(data_csv)
     missing_rows = df.isna().any(axis=1).sum()
@@ -58,7 +64,7 @@ def train_model(data_csv : str, model_path : str = "model.pkl") -> dict:
         raise ValueError("Invalid model file format. Please provide a .pkl file.")
     
     X, y = load_dataset(data_csv)
-    
+    X = add_features(X)
     model_linear, model_ridge = build_models()
 
     scores_ridge = cross_val_score(model_ridge, X, y, cv=5, scoring="r2")
@@ -68,21 +74,21 @@ def train_model(data_csv : str, model_path : str = "model.pkl") -> dict:
     mean_ridge = scores_ridge.mean()
     std_ridge = scores_ridge.std()
 
-    if abs(mean_ridge - mean_linear) < (std_linear + std_ridge) / 2:
-        selection = "close"
+    improvement = mean_ridge - mean_linear
+    threshold = 0.5 * (std_linear / (5 ** 0.5) + std_ridge / (5 ** 0.5))
+    if improvement < -threshold:
+        selection = "linear"
         model = model_linear
-    elif mean_ridge > mean_linear:
+        
+    elif improvement > threshold:
         selection = "ridge"
         model = model_ridge
     else:
-        selection = "linear"
+        selection = "close"
         model = model_linear
     
     model.fit(X, y)
     model = model.best_estimator_ if selection == "ridge" else model
-    r2 = r2_score(y, model.predict(X))
-    rmse = sqrt(mean_squared_error(y, model.predict(X)))
-    mae = mean_absolute_error(y, model.predict(X))
 
     linear = {
         "mean" : mean_linear,
@@ -122,6 +128,7 @@ def predict(input_data : str, model_path : str = None, output_path : str = None)
 
     if input_data.endswith(".csv"):
         df = pd.read_csv(input_data)
+        df = add_features(df)
     else:
         with open(input_data, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -132,11 +139,13 @@ def predict(input_data : str, model_path : str = None, output_path : str = None)
             df = pd.DataFrame(data)
         else:
             raise ValueError("Invalid JSON format. Please provide a JSON object or an array of JSON objects.")
+        df = add_features(df)
 
     missing_rows = df.isna().any(axis=1).sum()
     if missing_rows > 0:
         logging.warning(f"Warning: {missing_rows} row/s with missing values will be dropped.")
     df = df.dropna()
+
     expected = model_data["features"]
     missing = [feat for feat in expected if feat not in df.columns]
     if missing:
