@@ -5,6 +5,7 @@ from sklearn.model_selection import cross_val_predict, GridSearchCV
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 from sklearn.linear_model import LinearRegression, Ridge
 import pandas as pd
+import pickle as pkl
 from ml_engine import load_dataset, build_models, add_features
 
 #Baseline model evaluation using cross-validation predictions
@@ -59,4 +60,16 @@ def analyze_models(X : pd.DataFrame, y : pd.Series, model_linear : Pipeline, mod
 #Features
 X = add_features(X)
 
-analyze_models(X, y, model_linear, model_ridge)
+#analyze_models(X, y, model_linear, model_ridge)
+
+def analyze_coefficients(model_path : str) -> None:
+    model_path = "model.pkl"
+
+    with open(model_path, "rb") as f:
+        model_data = pkl.load(f)
+        model = model_data["model"]
+    coefficients = model.named_steps["model"].coef_
+    feature_names = model_data["features"]
+    feature_coefficients = pd.Series(coefficients, index=feature_names)
+    print("\nFeature coefficients:")
+    print(feature_coefficients.sort_values(key=lambda x: abs(x), ascending=False))
