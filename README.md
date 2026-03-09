@@ -1,4 +1,4 @@
-# ML Housing Price Predictor v2
+# ML Housing Price Predictor
 
 A professional-grade classical machine learning project focused on building a robust, reproducible regression pipeline for housing price prediction.
 
@@ -43,12 +43,41 @@ This project emphasizes correctness, evaluation discipline, and reproducibility.
 
 ---
 
+## Iterative Model Development (v3)
+
+After establishing a stable training pipeline in v2, the project continued with a third development phase focused on improving model understanding and performance.
+
+This phase introduced a structured experimentation workflow including:
+
+* Feature engineering of derived housing indicators
+* Error analysis of model predictions
+* Inspection of extreme prediction failures
+* Model coefficient interpretation for explainability
+
+New engineered features include:
+
+* `households = Population / AveOccup`
+* `people_per_bedroom = AveOccup / AveBedrms`
+* `bedrooms_per_room = AveBedrms / AveRooms`
+
+These experiments demonstrated that Ridge regression benefits significantly from the engineered features due to its ability to handle correlated predictors through regularization.
+
+All experiments and analyses are documented in the `reports/` directory.
+
+---
+
 ## Project Structure
 
 ```
 ml-housing-predictor-v2/
-├── input/
 ├── data/
+├── input/
+├── reports/
+│   ├── baseline_analysis.md
+│   ├── feature_engineering_v1.md
+│   └── model_interpretation_v1.md
+├── scripts/
+│   └── analyze_models.py
 ├── train.py
 ├── predict.py
 ├── ml_engine.py
@@ -161,6 +190,8 @@ This project strengthens understanding of:
 * Proper model evaluation
 * Reproducible ML artifacts
 * Engineering-oriented ML design
+* Feature engineering and model improvement
+* Model interpretability through coefficient analysis
 
 ---
 
